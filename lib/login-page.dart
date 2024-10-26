@@ -41,16 +41,48 @@ class _LoginPageState extends State<LoginPage> {
           body: {'email': email, 'password': password},
         );
         if (response.statusCode == 200) {
-          print('Login successful');// From Page A, navigate to Page B and remove all previous routes
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => DashboardPage()),
-                (Route<dynamic> route) => false, // This removes all the previous routes
+          // Show success alert dialog
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Success'),
+                content: const Text('Login successful!'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => DashboardPage()),
+                            (Route<dynamic> route) => false,
+                      );
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
           );
-
         } else {
-          print("Login failed");
+          // Show failure alert dialog
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Error'),
+                content: const Text('Login failed. Please check your credentials.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Try Again'),
+                  ),
+                ],
+              );
+            },
+          );
         }
+
       } catch (e) {
         print(e.toString());
       }

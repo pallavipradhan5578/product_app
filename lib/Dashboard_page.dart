@@ -10,13 +10,14 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-var data;
-Future<void> getApi() async {
-  final response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/posts')); // Fixed the URL
+Future<List<dynamic>> getUserApi() async {
+  final response = await http
+      .get(Uri.parse('https://jsonplaceholder.org/posts')); // Fixed the URL
   if (response.statusCode == 200) {
-    data = jsonDecode(response.body.toString());
+    var data = jsonDecode(response.body);
+    return data;
   } else {
-    // Handle error if needed
+    return [];
   }
 }
 
@@ -24,143 +25,171 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xff2c4cff),
-        title: Text(
-          'Dashboard Page',
-          style: TextStyle(color: Colors.white),
+        appBar: AppBar(
+          backgroundColor: const Color(0xff2c4cff),
+          title: Text(
+            'Dashboard Page',
+            style: TextStyle(color: Colors.white),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
+        body: Column(
           children: [
-            Expanded(
-              child: FutureBuilder(
-                future: getApi(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else {
-                    return ListView.builder(
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onDoubleTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailPage(
-                                )
-                              ),
-                            );
-                          },
-                          child: Stack(
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                height: 300,
-                                child: Card(
-                                  child: Column(
-                                    children: [
-                                      ReusableRow(
-                                        title: 'Id',
-                                        value: data[index]['id'].toString(),
-                                      ),
-                                      ReusableRow(
-                                        title: 'Slug',
-                                        value: data[index]['slug'] .toString() ,
-                                      ),
-                                      ReusableRow(
-                                        title: 'Title',
-                                        value: data[index]['title'].toString(),
-                                      ),
-                                      Container(
-                                        height: 25,
-                                        width: 75,
-                                        child: Center(child: Text("Category")),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: Colors.blue,
-                                            width: 1.0,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 20,
-                                left: 20,
-                                child: Container(
-                                  height: 25,
-                                  width: 75,
-                                  color: Colors.green,
-                                  child: Center(
-                                    child: Text("Status", style: TextStyle(color: Colors.white)),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 20,
-                                right: 20,
-                                child: Container(
-                                  height: 25,
-                                  width: 95,
-                                  color: Colors.green,
-                                  child: Center(
-                                    child: Text("PublishedAt", style: TextStyle(color: Colors.white)),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  }
-                },
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextFormField(
+                decoration: InputDecoration(
+                    hintText: '     Search',
+                    suffixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12))),
               ),
             ),
+            Expanded(
+              child: FutureBuilder<List<dynamic>>(
+                  future: getUserApi(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return Center(child: CircularProgressIndicator());
+                    } else {
+                      return ListView.builder(
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Stack(children: [
+                                GestureDetector(onTap: () {
+                                  // Pass data for the specific card to DetailPage
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => DetailPage(
+                                        data: snapshot.data![index], // Pass the data of the tapped card
+                                      ),
+                                    ),
+                                  );
+                                },
+                                  child: Card(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            height: 200,
+                                            width: 160,
+                                            decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                image: DecorationImage(
+                                                    image: NetworkImage(snapshot
+                                                        .data![index]['image']),
+                                                    fit: BoxFit.cover)),
+                                          ),
+                                          SizedBox(
+                                            width: 12,
+                                          ),
+                                          Expanded(
+                                            child: Stack(children: [
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                children: [
+                                                  Text(
+                                                      'ID: ${snapshot.data![index]['id']}',style: TextStyle(fontSize: 15),),
+                                                  SizedBox(
+                                                    height: 20,
+                                                  ),
+                                                  Text(
+                                                      'Slug: ${snapshot.data![index]['slug']}',style: TextStyle(fontSize: 15),),
+                                                  SizedBox(
+                                                    height: 20,
+                                                  ),
+                                                  Text(
+                                                      'Title: ${snapshot.data![index]['title']}',
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,style: TextStyle(fontSize: 15),),
+                                                  SizedBox(
+                                                    height: 10,
+                                                  ),
+                                                  Text(
+                                                    'Content: ${snapshot.data![index]['content']}',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                      style: TextStyle(fontSize: 15), ),
+                                                  SizedBox(
+                                                    height: 10,
+
+                                                  ),Text(
+                                                    'Category: ${snapshot.data![index]['category']}',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                    TextOverflow.ellipsis,
+                                                    style: TextStyle(fontSize: 15), ),
+                                                  SizedBox(
+                                                    height: 30,
+
+                                                  ),
+
+                                                ],
+                                              ),
+                                              Positioned(
+                                                right: 5,
+                                                top: 2,
+                                                child: Container(
+                                                  height: 25,
+                                                  width: 80,
+                                                  child: Center(
+                                                    child: Text(
+                                                      "Status",
+                                                      style: TextStyle(
+                                                          color: Colors.white),
+                                                    ),
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.green,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12)),
+                                                ),
+                                              )
+                                            ]),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 18,
+                                  bottom: 18,
+                                  child: Container(
+                                    height: 25,
+                                    width: 100,
+                                    child: Center(
+                                      child: Text(
+                                        "PublishedAt",
+                                        style: TextStyle(color: Colors.green,fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    decoration: BoxDecoration(
+
+                                        borderRadius:
+                                            BorderRadius.circular(8),border: Border.all(color: Colors.green,width: 1)),
+                                  ),
+                                )
+                              ]),
+                            );
+                          });
+                    }
+                  }),
+            )
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class ReusableRow extends StatelessWidget {
-  final String title, value;
-  ReusableRow({Key? key, required this.title, required this.value}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Flexible(
-            flex: 1,
-            child: Text(
-              title,
-              style: TextStyle(fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          SizedBox(width: 10),
-          Flexible(
-            flex: 1,
-            child: Text(
-              value,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ],
-      ),
-    );
+        ));
   }
 }
